@@ -332,7 +332,7 @@
 </div>
 
 <script>
-    // ALL 135 COMPLETE QUESTIONS - No placeholders
+    // ALL 135 COMPLETE QUESTIONS
     const questionsData = [
         { text: "Blockchain improves supply chain management by:", options: ["Reducing internet speed", "Providing product traceability", "Increasing data loss", "Removing multiplayer mode"], correct: "B" },
         { text: "In finance, blockchain reduces the need for ______.", options: ["Computers", "Intermediaries", "Internet", "Users"], correct: "B" },
@@ -471,18 +471,7 @@
         { text: "The main goal of ethical hacking is to:", options: ["Destroy systems", "Increase cybercrime", "Find vulnerabilities and improve security", "Create malware"], correct: "C" }
     ];
 
-    // Ensure we have exactly 135 questions
     let questions = [...questionsData];
-    
-    // Fill remaining if any (should be 135 total)
-    while(questions.length < 135) {
-        questions.push({
-            text: `Additional Question ${questions.length + 1}: This is a valid MCQ question for practice.`,
-            options: ["First option is correct", "Second option", "Third option", "Fourth option"],
-            correct: "A"
-        });
-    }
-
     let currentQuestions = [];
     let userAnswers = [];
     let currentIndex = 0;
@@ -495,41 +484,15 @@
         return arr;
     }
 
-    function initNewExam() {
+    // NEW: Start fresh exam - no saving on refresh
+    function startFreshExam() {
         currentQuestions = shuffleArray([...questions]);
         userAnswers = new Array(currentQuestions.length).fill(null);
         currentIndex = 0;
-        localStorage.removeItem('blockchainExam');
         updateAll();
         document.getElementById('resultsPanel').style.display = 'none';
         document.getElementById('examStatus').innerHTML = 'In Progress';
         document.getElementById('examStatus').style.color = '#ffc107';
-    }
-
-    function saveProgress() {
-        const progress = {
-            questions: currentQuestions,
-            answers: userAnswers,
-            index: currentIndex
-        };
-        localStorage.setItem('blockchainExam', JSON.stringify(progress));
-    }
-
-    function loadProgress() {
-        const saved = localStorage.getItem('blockchainExam');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                currentQuestions = data.questions;
-                userAnswers = data.answers;
-                currentIndex = data.index;
-                updateAll();
-            } catch(e) {
-                initNewExam();
-            }
-        } else {
-            initNewExam();
-        }
     }
 
     function updateAll() {
@@ -574,7 +537,6 @@
 
     window.selectOption = function(letter) {
         userAnswers[currentIndex] = letter;
-        saveProgress();
         updateStats();
         renderCurrentQuestion();
         renderNavGrid();
@@ -667,7 +629,7 @@
             </div>
             ${wrongHtml}
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="startNewExam()" style="background: #28a745; color: white; padding: 12px 24px;">Start New Exam</button>
+                <button onclick="startFreshExam()" style="background: #28a745; color: white; padding: 12px 24px;">Start New Exam</button>
                 <button onclick="document.getElementById('resultsPanel').style.display='none'" style="background: #6c757d; color: white; padding: 12px 24px; margin-left: 10px;">Close</button>
             </div>
         `;
@@ -676,16 +638,9 @@
         document.getElementById('examStatus').innerHTML = 'Completed';
     }
 
-    function startNewExam() {
-        if(confirm('Start a new exam? All current answers will be lost and questions will be shuffled.')) {
-            initNewExam();
-        }
-    }
-
     function resetAll() {
-        if(confirm('Clear all answers? You can continue answering after clearing.')) {
+        if(confirm('Clear all answers?')) {
             userAnswers.fill(null);
-            saveProgress();
             updateAll();
             document.getElementById('resultsPanel').style.display = 'none';
         }
@@ -693,11 +648,16 @@
 
     document.getElementById('nextBtn').addEventListener('click', nextQuestion);
     document.getElementById('prevBtn').addEventListener('click', prevQuestion);
-    document.getElementById('shuffleBtn').addEventListener('click', startNewExam);
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+        if(confirm('Start a new exam with shuffled questions? Current progress will be lost.')) {
+            startFreshExam();
+        }
+    });
     document.getElementById('resetBtn').addEventListener('click', resetAll);
     document.getElementById('submitFinalBtn').addEventListener('click', submitExam);
 
-    loadProgress();
+    // Start fresh on every page load (no saved progress)
+    startFreshExam();
 </script>
 </body>
 </html>
